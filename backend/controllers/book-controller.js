@@ -1,22 +1,44 @@
 const Book = require("../models/book-model");
 
+// exports.createBook = (req, res, next) => {
+//   delete req.body.id;
+//   const book = new Book({
+//     ...req.body,
+//   });
+//   book
+//     .save()
+//     .then(() => {
+//       res.status(201).json({ message: "Livres enregistré !" });
+//     })
+//     .catch((error) => res.status(400).json({ error: error }));
+// };
+
 exports.createBook = (req, res, next) => {
-  delete req.body.id;
+  const bookObject = JSON.parse(req.body.book);
+  delete bookObject._id;
+  delete bookObject._userID;
   const book = new Book({
-    ...req.body,
+    ...bookObject,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.name}`,
   });
+
   book
     .save()
     .then(() => {
-      res.status(201).json({ message: "Livres enregistré !" });
+      res.status(201).json({ message: "Livre enregistré !" });
     })
-    .catch((error) => res.status(400).json({ error: error }));
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
 };
 
 exports.modifyBook = (req, res, next) => {
   Book.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
     .then(() => res.status(200).json({ message: "Livres modifié !" }))
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
 };
 
 exports.deleteBook = (req, res, next) => {
