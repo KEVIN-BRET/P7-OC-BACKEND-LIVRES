@@ -25,20 +25,33 @@ exports.createBook = (req, res, next) => {
 };
 
 exports.modifyBook = (req, res, next) => {
-  const bookObject = req.file
+  const bookObject = req.file // si la requette contient un fichier ...)
     ? {
-        ...JSON.parse(req.body.book),
+        ...JSON.parse(req.body.book), // on recupere nootre objet en parsant la chaine de caractere
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          // on recupere l'url de l'image
           req.file.filename
         }`,
       }
     : { ...req.body };
 
   delete bookObject._userId;
+
+  // on cherche l'obet dans la bdd
   Book.findOne({ _id: req.params.id }).then((book) => {
     if (book.userId != req.auth.userId) {
       res.status(401).json({ message: "Non autorisé" });
     } else {
+      // si une nouvelle image est fournie, suppression de l'ancienne
+      if (req.file && book.imageUrl) {
+        const filename = book.imageUrl.split("/images/")[1];
+        fs.unlink(`images/${filename}`, 
+        (err) => {
+          if (err) console.log(err);
+        }
+        ); 
+      }
+
       Book.updateOne(
         { _id: req.params.id },
         { ...bookObject, _id: req.params.id }
