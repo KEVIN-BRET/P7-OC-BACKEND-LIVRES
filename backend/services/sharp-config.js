@@ -16,7 +16,8 @@ async function optimizeImage(file) {
 
   const destinationPath = absolutePath.replace(`.${extension}`, ".webp");
 
-  await sharp(absolutePath).resize(405, 540).webp().toFile(destinationPath);
+  await sharp(absolutePath).resize({width: 800,
+  fit: 'contain'}).webp().toFile(destinationPath);
 
   fs.unlink(absolutePath, (err) => {
     if (err) console.log(err);
