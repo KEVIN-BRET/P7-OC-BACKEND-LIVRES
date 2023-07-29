@@ -1,5 +1,7 @@
-const mongoose = require("mongoose");
+// Impport du module Mongoose
+const mongoose = require('mongoose');
 
+// Création du schema pour les livres :
 const bookSchema = mongoose.Schema({
   userId: { type: String, required: true },
   title: { type: String, required: true },
@@ -11,10 +13,11 @@ const bookSchema = mongoose.Schema({
     {
       _id: false,
       userId: { type: String, required: true },
-      grade: { type: Number, min: 1, required: true},
+      grade: { type: Number, min: 1, required: true },
     },
   ],
   averageRating: { type: Number },
 });
 
-module.exports = mongoose.model("Book", bookSchema);
+// Exportation du modèle Book
+module.exports = mongoose.model('Book', bookSchema);

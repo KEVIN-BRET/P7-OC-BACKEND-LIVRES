@@ -3,7 +3,6 @@ const http = require('http');
 
 // Import de l'application Express depuis le fichier './app.js'
 const app = require('./app');
-const { log } = require('console');
 
 // Normalisation du port de écoutes en nombre entier (base 10)
 const normalizePort = (val) => {
