@@ -1,37 +1,40 @@
-const Book = require("../models/book-model");
-const fs = require("fs");
+const Book = require('../models/book-model'); // Import du modèle de livre mongoose
+const fs = require('fs'); // Importat du module de système de fichiers
 
-const sharpConfig = require("../services/sharp-config");
+const sharpConfig = require('../services/sharp-config'); // Import de la configuration pour l'optimisation d'image
 
+// Créer un livre :
 exports.createBook = async (req, res, next) => {
-  const bookObject = JSON.parse(req.body.book);
-  const filename = await sharpConfig.optimizeImage(req.file);
-  delete bookObject._id;
-  delete bookObject._userID;
+  const bookObject = JSON.parse(req.body.book); // Analyser l'objet livre à partir de la requête
+  const filename = await sharpConfig.optimizeImage(req.file); // Optimiser l'image associée
+  delete bookObject._id; // Supprimer la propriété _id
+  delete bookObject._userID; // Supprimer la propriété _userID
+  // Créer et enregistrer le livre
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
-    imageUrl: `${req.protocol}://${req.get("host")}/${filename}`,
+    imageUrl: `${req.protocol}://${req.get('host')}/${filename}`, // Générer l'URL de l'image
   });
-
+  // Enregistrement dans la base de données
   book
     .save()
     .then(() => {
-      res.status(201).json({ message: "Livre enregistré !" });
+      res.status(201).json({ message: 'Livre enregistré !' });
     })
     .catch((error) => {
       res.status(400).json({ error });
     });
 };
 
+// Modifier un livre :
 exports.modifyBook = async (req, res, next) => {
   let filename;
-  // si la requette contient un fichier
-  if (req.file) filename = await sharpConfig.optimizeImage(req.file);
-  const bookObject = req.file // si la requette contient un fichier ...)
+  // si la requette contient un fichier ..
+  if (req.file) filename = await sharpConfig.optimizeImage(req.file); // on l'optimise
+  const bookObject = req.file // si la requette contient un fichier ...
     ? {
         ...JSON.parse(req.body.book), // on recupere notre objet en parsant la chaine de caractere
-        imageUrl: `${req.protocol}://${req.get("host")}/${filename}`,
+        imageUrl: `${req.protocol}://${req.get('host')}/${filename}`,
       }
     : { ...req.body };
 
@@ -40,34 +43,35 @@ exports.modifyBook = async (req, res, next) => {
   // on cherche l'objet dans la bdd
   Book.findOne({ _id: req.params.id }).then((book) => {
     if (book.userId != req.auth.userId) {
-      res.status(401).json({ message: "Non autorisé" });
+      res.status(401).json({ message: 'Non autorisé' });
     } else {
       // si une nouvelle image est fournie, suppression de l'ancienne
       if (req.file && book.imageUrl) {
-        const filename = book.imageUrl.split("/images/")[1];
+        const filename = book.imageUrl.split('/images/')[1];
         fs.unlink(`images/${filename}`, (err) => {
           if (err) console.log(err);
         });
       }
 
       Book.updateOne({ _id: req.params.id }, { ...bookObject })
-        .then(() => res.status(200).json({ message: "Livre modifié !" }))
+        .then(() => res.status(200).json({ message: 'Livre modifié !' }))
         .catch((error) => res.status(401).json({ error }));
     }
   });
 };
 
+// Supprimer un livre :
 exports.deleteBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
-        res.status(401).json({ message: "Non autorisé" });
+        res.status(401).json({ message: 'Non autorisé' });
       } else {
-        const filename = book.imageUrl.split("/images/")[1];
+        const filename = book.imageUrl.split('/images/')[1];
         fs.unlink(`images/${filename}`, () => {
           Book.deleteOne({ _id: req.params.id })
             .then(() => {
-              res.status(200).json({ message: "Livre supprimé !" });
+              res.status(200).json({ message: 'Livre supprimé !' });
             })
             .catch((error) => res.status(401).json({ error }));
         });
@@ -79,37 +83,37 @@ exports.deleteBook = (req, res, next) => {
     });
 };
 
+// Obtenir un livre :
 exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => res.status(200).json(book))
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Obtenir tous les livres :
 exports.getAllBooks = (req, res, next) => {
   Book.find()
     .then((books) => res.status(200).json(books))
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Ajouter un note à un livre :
 exports.addRating = (req, res, next) => {
-  // La requette du front envoie une note contenue dans "rating:",
-  // or en base de données, la note doit être contenu dans "grade":
+  // Le front envoie une note dans "rating:", or nous voulons qu'elle soit contenu dans "grade:"
+  const ratingObject = { ...req.body, grade: req.body.rating }; // On ajoute la propriété grade, dont la valeur est egale à la valeur de rating
+  delete ratingObject.rating; // On supprime la propriété Rating devenu inutile
 
-  // Donc :
-
-  // On créé une constante ratingObject qui est un objet contenant les informations contenues dans le corps de la requête
-  const ratingObject = req.body;
-  // On ajoute une propriété "grade" qui contient la valeur de "rating"
-  ratingObject.grade = ratingObject.rating;
-  // On supprime la propriété "rating", car remplacée par "grade" et devenue inutile
-  delete ratingObject.rating;
+  // Est-ce que l'utilisateur a déjà laissé une note ?
+  const userRating = book.ratings.includes(
+    (rating) => rating.userId == req.body.userId
+  );
 
   // On cherche le livre dont l'_id correspond à l'id de la requette
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (!book) {
         // si le livre n'est pas trouvé, on renvoi une erreur
-        res.status(404).json({ message: "Livre inconnu" });
+        res.status(404).json({ message: 'Livre introuvable !' });
       } else {
         // On vérifie si l'utilisateur a déja noté le livre (si l'id de l'utilisateur est inclu dans le tableau des notes)
         const userRating = book.ratings.includes(
@@ -117,7 +121,7 @@ exports.addRating = (req, res, next) => {
         );
         if (userRating) {
           // si c'est le cas, on renvoi un msg d'erreur
-          res.status(404).json({ message: "Vous avez déja noté ce livre" });
+          res.status(404).json({ message: 'Vous avez déja noté ce livre' });
         } else {
           // sinon on ajoute la note au tableau "ratings"
           Book.updateOne(
