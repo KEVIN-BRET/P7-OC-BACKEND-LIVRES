@@ -19,7 +19,7 @@ async function optimizeImage(file) {
   await sharp(absolutePath)
     .resize({ width: 800, fit: 'contain' })
     .webp()
-    .toFile(destinationPath);
+    .toFile(destinationPath); 
 
   fs.unlink(absolutePath, (err) => {
     if (err) console.log(err);

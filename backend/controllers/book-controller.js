@@ -109,35 +109,59 @@ exports.addRating = (req, res, next) => {
 
   Book.findOne({ _id: req.params.id })
     .then((book) => {
-      if (!book) {
-        res.status(404).json({ message: 'Livre introuvable !' });
+      const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
+      if (userRating) {
+        res.status(404).json({ message: 'Vous avez déja noté ce livre' });
       } else {
-        const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
-        if (userRating) {
-          res.status(404).json({ message: 'Vous avez déja noté ce livre' });
-        } else {
-          Book.updateOne(
-            { _id: req.params.id },
-            { $push: { ratings: ratingObject } }
-          )
-            .then(() => {
-              // appel de la fonction de mise a jour de la moyenne
-              return updateAverageRating(req.params.id, book.ratings);
-            })
-            .then((averageRating) => {
-              Book.findOne({ _id: req.params.id })
-                .then((book) => {
-                  res.status(200).json(book);
-                })
-                .catch((error) => res.status(404).json({ error }));
-            })
-            .catch((error) => res.status(400).json({ error }));
-        }
+        Book.updateOne(
+          { _id: req.params.id },
+          { $push: { ratings: ratingObject } }
+        )
+          .then(() => {
+            const averageRating = book.averageRating
+            console.log(averageRating);
+            // appel de la fonction de mise a jour de la moyenne
+            // return updateAverageRating(req.params.id, book.ratings);
+          })
+          .then((book) => {
+            res.status(200).json(book);
+          })
+          .catch((error) => res.status(400).json({ error }));
       }
     })
-    .catch((error) => {
-      res.status(500).json({ error });
-    });
+    .catch((error) => res.status(400).json({ error }));
+
+  // Book.findOne({ _id: req.params.id })
+  //   .then((book) => {
+  //     if (!book) {
+  //       res.status(404).json({ message: 'Livre introuvable !' });
+  //     } else {
+  //       const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
+  //       if (userRating) {
+  //         res.status(404).json({ message: 'Vous avez déja noté ce livre' });
+  //       } else {
+  //         Book.updateOne(
+  //           { _id: req.params.id },
+  //           { $push: { ratings: ratingObject } }
+  //         )
+  //           .then(() => {
+  //             // appel de la fonction de mise a jour de la moyenne
+  //             return updateAverageRating(req.params.id, book.ratings);
+  //           })
+  //           .then((averageRating) => {
+  //             Book.findOne({ _id: req.params.id })
+  //               .then((book) => {
+  //                 res.status(200).json(book);
+  //               })
+  //               .catch((error) => res.status(404).json({ error }));
+  //           })
+  //           .catch((error) => res.status(400).json({ error }));
+  //       }
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     res.status(500).json({ error });
+  //   });
 };
 
 exports.getBestRatedBooks = (req, res, next) => {

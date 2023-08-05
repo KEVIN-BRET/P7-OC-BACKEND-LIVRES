@@ -1,7 +1,8 @@
 // updateAverageRating.js
 const Book = require('../models/book-model'); 
 
-const updateAverageRating = (bookId, ratings) => {
+const updateAverageRating = 
+(bookId, ratings) => {
   return new Promise((resolve, reject) => {
     Book.findOne({ _id: bookId })
       .then((book) => {
@@ -10,6 +11,7 @@ const updateAverageRating = (bookId, ratings) => {
           (acc, rating) => acc + rating.grade,
           0
         );
+		console.log("moyenne recaculée");
         book.averageRating =
           Math.round((somme / ratings.length) * 10) / 10;
 
