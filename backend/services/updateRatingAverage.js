@@ -1,6 +1,7 @@
 // Importation du modèle de livre
 const Book = require('../models/book-model'); 
 
+// Mise à jour de la note moyenne d'un livre
 function updateAverageRating(bookId) {
   return new Promise((resolve, reject) => {
     Book.findOne({ _id: bookId })

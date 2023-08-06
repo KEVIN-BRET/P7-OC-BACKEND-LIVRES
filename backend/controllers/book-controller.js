@@ -2,7 +2,9 @@ const Book = require('../models/book-model'); // Import du modèle de livre mong
 const fs = require('fs'); // Importat du module de système de fichiers
 
 const sharpConfig = require('../services/sharp-config'); // Import de la configuration pour l'optimisation d'image
-const updateAverageRating = require('../services/updateAverageRating'); // Assurez-vous que le chemin d'importation est correct
+const updateRatingAverage = require('../services/updateRatingAverage'); // Import de la fonction de mise à jour de la note moyenne
+const hasUserAlreadyRated = require('../services/hasUserAlreadyRated'); // Import de la fonction de vérification de note existante
+
 
 // Créer un livre :
 exports.createBook = async (req, res, next) => {
@@ -116,12 +118,9 @@ exports.getBestRatedBooks = (req, res, next) => {
 
 // Noter un livre :
 exports.addRating = (req, res, next) => {
+  // Créer un objet note à partir de la requête
   const ratingObject = { ...req.body, grade: req.body.rating };
   delete ratingObject.rating;
-
-  function hasUserAlreadyRated(userId, ratings) {
-    return ratings.some((rating) => rating.userId == userId);
-  }
 
   Book.findOne({ _id: req.params.id })
     .then((book) => {
@@ -137,7 +136,7 @@ exports.addRating = (req, res, next) => {
         )
           .then(() => {
             // Mettre à jour la note moyenne du livre
-            updateAverageRating(req.params.id)
+            updateRatingAverage(req.params.id)
               .then(() => {
                 // Renvoyer le livre mis à jour
                 Book.findOne({ _id: req.params.id })
