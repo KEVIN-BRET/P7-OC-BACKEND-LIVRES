@@ -43,6 +43,7 @@ Back-end :
 
 Depuis le répertoire frontend/, faites la commande "npm install" pour installer les dépendances puis "nodemon server" pour lancer le serveur en local.
 
+Variables d'environnement : [Télécharger le fichier ".env"](https://drive.google.com/file/d/1ZPo841pXSc40vDCb3rCeOqitNYP-Ufmz/view?usp=sharing)
 
 ## 🔗 Links
 [![OPENCLASSROOMS](https://img.shields.io/badge/OPENCLASSROOMS-7451EB?style=for-the-badge&logoColor=white)](https://openclassrooms.com/fr/)
