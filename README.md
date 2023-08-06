@@ -1,7 +1,7 @@
 
 # Développez le back-end d'un site de notation de livres
 
-Projet OpenClassrooms N°7 : Mon vieux grimoire
+### Projet OpenClassrooms N°7 : Mon vieux grimoire
 
 ![image](https://user.oc-static.com/upload/2022/10/11/16654934257102_DW-P7-Back-end_company-banner.png)
 
@@ -33,17 +33,17 @@ Kévin vous contacte pour vous proposer de travailler avec lui en mutualisant vo
 - Optimiser les images envoyées par les utilisateurs
 ## Comment lancer le projet ?
 
-Front-end : 
+### Front-end : 
 
 Depuis le répertoire frontend/, faites la commande "npm install" pour installer les dépendances puis "npm start" pour lancer le projet.
 
 (Le projet a été testé sur node 19)
 
-Back-end :
+### Back-end :
 
 Depuis le répertoire frontend/, faites la commande "npm install" pour installer les dépendances puis "nodemon server" pour lancer le serveur en local.
 
-Variables d'environnement : [Télécharger le fichier ".env"](https://drive.google.com/file/d/1ZPo841pXSc40vDCb3rCeOqitNYP-Ufmz/view?usp=sharing)
+### Variables d'environnement : [Télécharger le fichier ".env"](https://drive.google.com/file/d/1ZPo841pXSc40vDCb3rCeOqitNYP-Ufmz/view?usp=sharing)
 
 ## 🔗 Links
 [![OPENCLASSROOMS](https://img.shields.io/badge/OPENCLASSROOMS-7451EB?style=for-the-badge&logoColor=white)](https://openclassrooms.com/fr/)
