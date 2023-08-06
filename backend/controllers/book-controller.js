@@ -2,7 +2,7 @@ const Book = require('../models/book-model'); // Import du modèle de livre mong
 const fs = require('fs'); // Importat du module de système de fichiers
 
 const sharpConfig = require('../services/sharp-config'); // Import de la configuration pour l'optimisation d'image
-const updateAverageRating = require('../services/updateAverageRating'); // Import de la fonction de mise à jour de la note moyenne
+const updateAverageRating = require('../services/updateAverageRating'); // Assurez-vous que le chemin d'importation est correct
 
 // Créer un livre :
 exports.createBook = async (req, res, next) => {
@@ -91,6 +91,13 @@ exports.getOneBook = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Obtenir les notes d'un livre :
+exports.getBookRatings = (req, res, next) => {
+  Book.findOne({ _id: req.params.id })
+    .then((book) => res.status(200).json(book.ratings))
+    .catch((error) => res.status(400).json({ error }));
+};
+
 // Obtenir tous les livres :
 exports.getAllBooks = (req, res, next) => {
   Book.find()
@@ -98,76 +105,53 @@ exports.getAllBooks = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
-// Ajouter une note :
-exports.addRating = (req, res, next) => {
-  const ratingObject = { ...req.body, grade: req.body.rating };
-  delete ratingObject.rating;
-  // Vérifier si l'utilisateur a déja noté le livre
-  function hasUserAlreadyRated(userId, ratings) {
-    return ratings.includes((rating) => rating.userId == userId);
-  }
-
-  Book.findOne({ _id: req.params.id })
-    .then((book) => {
-      const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
-      if (userRating) {
-        res.status(404).json({ message: 'Vous avez déja noté ce livre' });
-      } else {
-        Book.updateOne(
-          { _id: req.params.id },
-          { $push: { ratings: ratingObject } }
-        )
-          .then(() => {
-            const averageRating = book.averageRating
-            console.log(averageRating);
-            // appel de la fonction de mise a jour de la moyenne
-            // return updateAverageRating(req.params.id, book.ratings);
-          })
-          .then((book) => {
-            res.status(200).json(book);
-          })
-          .catch((error) => res.status(400).json({ error }));
-      }
-    })
-    .catch((error) => res.status(400).json({ error }));
-
-  // Book.findOne({ _id: req.params.id })
-  //   .then((book) => {
-  //     if (!book) {
-  //       res.status(404).json({ message: 'Livre introuvable !' });
-  //     } else {
-  //       const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
-  //       if (userRating) {
-  //         res.status(404).json({ message: 'Vous avez déja noté ce livre' });
-  //       } else {
-  //         Book.updateOne(
-  //           { _id: req.params.id },
-  //           { $push: { ratings: ratingObject } }
-  //         )
-  //           .then(() => {
-  //             // appel de la fonction de mise a jour de la moyenne
-  //             return updateAverageRating(req.params.id, book.ratings);
-  //           })
-  //           .then((averageRating) => {
-  //             Book.findOne({ _id: req.params.id })
-  //               .then((book) => {
-  //                 res.status(200).json(book);
-  //               })
-  //               .catch((error) => res.status(404).json({ error }));
-  //           })
-  //           .catch((error) => res.status(400).json({ error }));
-  //       }
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     res.status(500).json({ error });
-  //   });
-};
-
+// Obtenir les 3 meilleurs livres :
 exports.getBestRatedBooks = (req, res, next) => {
   Book.find()
     .sort({ averageRating: -1 })
     .limit(3) // Limite les résultats aux 3 premiers livres
     .then((books) => res.status(200).json(books))
     .catch((error) => res.status(400).json({ error }));
+};
+
+// Noter un livre :
+exports.addRating = (req, res, next) => {
+  const ratingObject = { ...req.body, grade: req.body.rating };
+  delete ratingObject.rating;
+
+  function hasUserAlreadyRated(userId, ratings) {
+    return ratings.some((rating) => rating.userId == userId);
+  }
+
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      // Vérifier si l'utilisateur a déjà noté ce livre
+      const userRating = hasUserAlreadyRated(req.body.userId, book.ratings);
+      if (userRating) {
+        res.status(404).json({ message: 'Vous avez déjà noté ce livre' });
+      } else {
+        // Ajouter la note à la liste des notes du livre
+        Book.updateOne(
+          { _id: req.params.id },
+          { $push: { ratings: ratingObject } }
+        )
+          .then(() => {
+            // Mettre à jour la note moyenne du livre
+            updateAverageRating(req.params.id)
+              .then(() => {
+                // Renvoyer le livre mis à jour
+                Book.findOne({ _id: req.params.id })
+                  .then((book) => {
+                    res.status(200).json(book);
+                  })
+                  .catch((error) => res.status(404).json({ error }));
+              })
+              .catch((error) => res.status(401).json({ error }));
+          })
+          .catch((error) => res.status(400).json({ error }));
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
 };

@@ -1,29 +1,23 @@
-// updateAverageRating.js
+// Importation du modèle de livre
 const Book = require('../models/book-model'); 
 
-const updateAverageRating = 
-(bookId, ratings) => {
+function updateAverageRating(bookId) {
   return new Promise((resolve, reject) => {
     Book.findOne({ _id: bookId })
       .then((book) => {
-        // on recalcule la moyenne
-        const somme = ratings.reduce(
+        const totalGrade = book.ratings.reduce(
           (acc, rating) => acc + rating.grade,
           0
         );
-		console.log("moyenne recaculée");
-        book.averageRating =
-          Math.round((somme / ratings.length) * 10) / 10;
+        const averageRating =
+          Math.round((totalGrade / book.ratings.length) * 10) / 10;
 
-        Book.updateOne(
-          { _id: bookId },
-          { averageRating: book.averageRating }
-        )
-          .then(() => resolve(book.averageRating))
+        Book.updateOne({ _id: bookId }, { averageRating: averageRating })
+          .then(() => resolve(averageRating))
           .catch((error) => reject(error));
       })
       .catch((error) => reject(error));
   });
-};
+}
 
 module.exports = updateAverageRating;
