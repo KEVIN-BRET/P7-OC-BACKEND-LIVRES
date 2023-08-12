@@ -128,13 +128,15 @@ exports.addRating = (req, res, next) => {
       if (userRating) {
         res.status(422).json({ message: 'Vous avez déjà noté ce livre' });
       } else {
-        // Ajouter la note à la liste des notes du livre
+        // Recalculer la note moyenne
         const averageRating = getRatingAverage(book, ratingObject);
+        // Ajouter la note à la liste des notes et mettre à jour la note moyenne
         Book.updateOne(
           { _id: req.params.id },
           { $push: { ratings: ratingObject }, averageRating: averageRating }
         )
           .then((book) => {
+            // Renvoyer le livre mis à jour
             Book.findOne({ _id: req.params.id }).then((book) =>
               res.status(200).json(book)
             );
